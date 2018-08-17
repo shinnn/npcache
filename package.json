@@ -1,0 +1,43 @@
+{
+  "name": "npcache",
+  "version": "1.0.0",
+  "description": "Manipulate cache of npm packages",
+  "repository": "shinnn/npcache",
+  "author": "Shinnosuke Watanabe (https://github.com/shinnn)",
+  "license": "ISC",
+  "scripts": {
+    "pretest": "eslint .",
+    "test": "nyc --reporter=html --reporter=text node test/test.js"
+  },
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    "npm",
+    "cache",
+    "cacache",
+    "promise",
+    "stream",
+    "package",
+    "async"
+  ],
+  "dependencies": {
+    "npm-cache-path": "^1.0.0",
+    "reject-unsatisfied-npm-version": "^1.0.0",
+    "resolve-from-npm": "^3.1.0"
+  },
+  "devDependencies": {
+    "@shinnn/eslint-config-node": "^6.0.0",
+    "clear-module": "^3.0.0",
+    "eslint": "^5.3.0",
+    "nyc": "^13.0.1",
+    "path-key": "^2.0.1",
+    "tape": "^4.9.1"
+  },
+  "eslintConfig": {
+    "extends": "@shinnn/node",
+    "rules": {
+      "no-use-extend-native/no-use-extend-native": "off"
+    }
+  }
+}
