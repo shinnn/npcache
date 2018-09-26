@@ -6,12 +6,13 @@ const {finished, Readable} = require('stream');
 const {promisify} = require('util');
 const {randomBytes} = require('crypto');
 
+const brokenNpmPath = require('broken-npm-path');
 const clearModule = require('clear-module');
 const pathKey = require('path-key');
 const test = require('tape');
 
 test('npcache', async t => {
-	const npcache = require('..');
+	const npcache = require('.');
 
 	const [key] = await Promise.all([
 		(async () => (await promisify(randomBytes)(256)).toString('hex'))(),
@@ -39,10 +40,10 @@ test('npcache', async t => {
 });
 
 test('npcache with an environment where async iteration is not implemented', async t => {
-	clearModule('..');
+	clearModule('.');
 	delete Readable.prototype[Symbol.asyncIterator];
 
-	const npcache = require('..');
+	const npcache = require('.');
 
 	try {
 		await promisify(finished)(await npcache.get.stream.byDigest('base64-+123456789=='));
@@ -59,10 +60,10 @@ test('npcache with an environment where async iteration is not implemented', asy
 
 test('npcache with a broken npm CLI', async t => {
 	clearModule.all();
-	process.env.npm_execpath = require.resolve('./fixture-broken-npm/node_modules/npm'); // eslint-disable-line camelcase
+	process.env.npm_execpath = brokenNpmPath; // eslint-disable-line camelcase
 
 	try {
-		await require('..').clearMemoized();
+		await require('.').clearMemoized();
 		t.fail('Unexpectedly succeeded.');
 	} catch ({message}) {
 		t.equal(
@@ -83,7 +84,7 @@ test('npcache with no globally installed npm CLI', async t => {
 	delete process.env.npm_execpath;
 
 	try {
-		await require('..').get.info();
+		await require('.').get.info();
 		t.fail('Unexpectedly succeeded.');
 	} catch ({code}) {
 		t.ok(/^1|ENOENT$/u.test(code), 'should fail to call any methods.');
@@ -98,7 +99,7 @@ test('npcache with a broken npm cache path', async t => {
 	delete process.env.npm_config_cache;
 
 	try {
-		await require('..').verify();
+		await require('.').verify();
 		t.fail('Unexpectedly succeeded.');
 	} catch ({code}) {
 		t.ok(/^1|ENOENT$/u.test(code), 'should fail to call any methods.');

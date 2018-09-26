@@ -1,4 +1,3 @@
-.nyc_output
-/node_modules
-test/_cacache
+_cacache
 coverage
+node_modules

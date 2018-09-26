@@ -6,4 +6,4 @@ install:
   - ps: Install-Product node Stable x64
   - npm ci
 build: off
-test_script: node test\test.js
+test_script: node test.js
