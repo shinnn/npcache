@@ -2,7 +2,6 @@
 
 [![npm version](https://img.shields.io/npm/v/npcache.svg)](https://www.npmjs.com/package/npcache)
 [![Build Status](https://travis-ci.com/shinnn/npcache.svg?branch=master)](https://travis-ci.com/shinnn/npcache)
-[![Build status](https://ci.appveyor.com/api/projects/status/5p6wq6p4cnnh6n44?svg=true)](https://ci.appveyor.com/project/ShinnosukeWatanabe/npcache)
 [![Coverage Status](https://img.shields.io/coveralls/shinnn/npcache.svg)](https://coveralls.io/github/shinnn/npcache?branch=master)
 
 Manipulate cache of npm packages
