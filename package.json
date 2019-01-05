@@ -1,6 +1,6 @@
 {
 	"name": "npcache",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Manipulate cache of npm packages",
 	"repository": "shinnn/npcache",
 	"author": "Shinnosuke Watanabe (https://github.com/shinnn)",
