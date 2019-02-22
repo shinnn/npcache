@@ -1,7 +1,9 @@
 'use strict';
 
 const {join} = require('path');
+const {promisify} = require('util');
 const readableAsyncIterator = require('stream').Readable.prototype[Symbol.asyncIterator];
+const {stat} = require('fs');
 
 const npmCachePath = require('npm-cache-path');
 const rejectUnsatisfiedNpmVersion = require('reject-unsatisfied-npm-version');
@@ -9,6 +11,7 @@ const resolveFromNpm = require('resolve-from-npm');
 
 const MINIMUM_REQUIRED_NPM_VERSION = '5.6.0';
 const MODULE_NAME = 'cacache';
+const promisifiedStat = promisify(stat);
 let promiseCache;
 
 async function prepare() {
@@ -34,12 +37,45 @@ async function prepare() {
 			}
 		})(),
 		(async () => {
+			let parentDir;
+
 			try {
-				return join(await npmCachePath(), '_cacache');
+				parentDir = await npmCachePath();
 			} catch (err) {
 				error = err;
 				return null;
 			}
+
+			const cachePath = join(parentDir, '_cacache');
+
+			await Promise.all([
+				{
+					path: cachePath,
+					place: 'there'
+				},
+				{
+					path: parentDir,
+					place: `at its parent path ${parentDir}`
+				}
+			].map(async ({path, place}) => {
+				let isFile;
+
+				try {
+					isFile = (await promisifiedStat(parentDir)).isFile();
+				} catch (_) {
+					return;
+				}
+
+				if (isFile) {
+					const enotdirError = new Error(`The current npm CLI setting indicates ${cachePath} is used as a cache directory for npm packages, but a file exists ${place}.`);
+
+					enotdirError.code = 'ENOTDIR';
+					enotdirError.path = path;
+					error = enotdirError;
+				}
+			}));
+
+			return cachePath;
 		})(),
 		rejectUnsatisfiedNpmVersion(MINIMUM_REQUIRED_NPM_VERSION)
 	]);

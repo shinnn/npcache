@@ -1,18 +1,24 @@
 'use strict';
 
-process.env.npm_config_cache = __dirname; // eslint-disable-line camelcase
-
 const {finished, Readable} = require('stream');
+const {join} = require('path');
 const {promisify} = require('util');
 const {randomBytes} = require('crypto');
 
 const brokenNpmPath = require('broken-npm-path');
 const clearModule = require('clear-module');
 const pathKey = require('path-key');
+const rmfr = require('rmfr');
 const test = require('tape');
+
+const tmp = join(__dirname, 'tmp');
+
+process.env.npm_config_cache = tmp;
 
 test('npcache', async t => {
 	const npcache = require('.');
+
+	await rmfr(tmp);
 
 	const [key] = await Promise.all([
 		(async () => (await promisify(randomBytes)(256)).toString('hex'))(),
@@ -58,9 +64,30 @@ test('npcache with an environment where async iteration is not implemented', asy
 	t.end();
 });
 
+test('npcache with a non-directory npm cache path', async t => {
+	clearModule('.');
+	process.env.npm_config_cache = __filename;
+
+	try {
+		await require('.').verify.lastRun();
+		t.fail('Unexpectedly succeeded.');
+	} catch ({message}) {
+		t.equal(
+			message,
+			`The current npm CLI setting indicates ${
+				join(__filename, '_cacache')
+			} is used as a cache directory for npm packages, but a file exists at its parent path ${__filename}.`,
+			'should fail to call any methods.'
+		);
+	}
+
+	t.end();
+});
+
 test('npcache with a broken npm CLI', async t => {
 	clearModule.all();
-	process.env.npm_execpath = brokenNpmPath; // eslint-disable-line camelcase
+	process.env.npm_config_cache = tmp;
+	process.env.npm_execpath = brokenNpmPath;
 
 	try {
 		await require('.').clearMemoized();
