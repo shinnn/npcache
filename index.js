@@ -9,7 +9,7 @@ const npmCachePath = require('npm-cache-path');
 const rejectUnsatisfiedNpmVersion = require('reject-unsatisfied-npm-version');
 const resolveFromNpm = require('resolve-from-npm');
 
-const MINIMUM_REQUIRED_NPM_VERSION = '5.6.0';
+const MINIMUM_REQUIRED_NPM_VERSION = '6.9.0';
 const MODULE_NAME = 'cacache';
 const promisifiedStat = promisify(stat);
 let promiseCache;
