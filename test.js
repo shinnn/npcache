@@ -1,6 +1,5 @@
 'use strict';
 
-const {finished, Readable} = require('stream');
 const {join} = require('path');
 const {promisify} = require('util');
 const {randomBytes} = require('crypto');
@@ -40,25 +39,6 @@ test('npcache', async t => {
 				'should support stream API.'
 			);
 		}
-	}
-
-	t.end();
-});
-
-test('npcache with an environment where async iteration is not implemented', async t => {
-	clearModule('.');
-	delete Readable.prototype[Symbol.asyncIterator];
-
-	const npcache = require('.');
-
-	try {
-		await promisify(finished)(await npcache.get.stream.byDigest('base64-+123456789=='));
-		t.fail('Unexpectedly succeeded.');
-	} catch ({message}) {
-		t.ok(
-			message.startsWith('ENOENT: no such file or directory'),
-			'should still support stream API.'
-		);
 	}
 
 	t.end();

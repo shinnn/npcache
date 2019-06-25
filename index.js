@@ -122,19 +122,17 @@ for (const method of [
 	['verify', 'lastRun']
 ]) {
 	if (Array.isArray(method)) {
-		if (readableAsyncIterator && method[1] === 'stream' && method[0] !== 'put') {
+		if (method[1] === 'stream' && method[0] !== 'put') {
 			module.exports[method[0]][method[1]] = async (...args) => {
 				const [cacache, cachePath] = await prepare();
 				return toAsyncIterable(cacache[method[0]][method[1]](cachePath, ...args));
 			};
-
-			continue;
+		} else {
+			module.exports[method[0]][method[1]] = async (...args) => {
+				const [cacache, cachePath] = await prepare();
+				return cacache[method[0]][method[1]](cachePath, ...args);
+			};
 		}
-
-		module.exports[method[0]][method[1]] = async (...args) => {
-			const [cacache, cachePath] = await prepare();
-			return cacache[method[0]][method[1]](cachePath, ...args);
-		};
 
 		continue;
 	}
