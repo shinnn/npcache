@@ -62,7 +62,7 @@ async function prepare() {
 
 				try {
 					isFile = (await promisifiedStat(parentDir)).isFile();
-				} catch (_) {
+				} catch {
 					return;
 				}
 
