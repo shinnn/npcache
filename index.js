@@ -1,9 +1,8 @@
 'use strict';
 
 const {join} = require('path');
-const {promisify} = require('util');
 const readableAsyncIterator = require('stream').Readable.prototype[Symbol.asyncIterator];
-const {stat} = require('fs');
+const {stat} = require('fs').promises;
 
 const npmCachePath = require('npm-cache-path');
 const rejectUnsatisfiedNpmVersion = require('reject-unsatisfied-npm-version');
@@ -11,7 +10,6 @@ const resolveFromNpm = require('resolve-from-npm');
 
 const MINIMUM_REQUIRED_NPM_VERSION = '6.9.0';
 const MODULE_NAME = 'cacache';
-const promisifiedStat = promisify(stat);
 let promiseCache;
 
 async function prepare() {
@@ -61,7 +59,7 @@ async function prepare() {
 				let isFile;
 
 				try {
-					isFile = (await promisifiedStat(parentDir)).isFile();
+					isFile = (await stat(parentDir)).isFile();
 				} catch {
 					return;
 				}
