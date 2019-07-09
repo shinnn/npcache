@@ -1,7 +1,7 @@
 'use strict';
 
 const {join} = require('path');
-const readableAsyncIterator = require('stream').Readable.prototype[Symbol.asyncIterator];
+const {Readable, Writable} = require('stream');
 const {stat} = require('fs').promises;
 
 const npmCachePath = require('npm-cache-path');
@@ -10,7 +10,37 @@ const resolveFromNpm = require('resolve-from-npm');
 
 const MINIMUM_REQUIRED_NPM_VERSION = '6.9.0';
 const MODULE_NAME = 'cacache';
+const STREAM_EVENTS = new Set(['error', 'integrity', 'metadata']);
+const readableAsyncIterator = Readable.prototype[Symbol.asyncIterator];
 let promiseCache;
+
+class NpcachePutStream extends Writable {
+	#promise;
+
+	constructor(...args) {
+		super();
+
+		this.cork();
+		this.#promise = (async () => {
+			try {
+				const [cacache, cachePath] = await prepare();
+				this.internalStream = cacache.put.stream(cachePath, ...args);
+				this.uncork();
+			} catch (err) {
+				this.destroy(err);
+			}
+		})();
+	}
+
+	_write(chunk, encoding, cb) {
+		this.internalStream.write(chunk, encoding, cb);
+	}
+
+	async _final(cb) {
+		await this.#promise;
+		this.internalStream.end(cb);
+	}
+}
 
 async function prepare() {
 	if (promiseCache) {
@@ -94,10 +124,8 @@ function toAsyncIterable(stream) {
 	return stream;
 }
 
-module.exports = {
-	rm: {},
-	tmp: {}
-};
+exports.rm = {};
+exports.tmp = {};
 
 for (const method of [
 	'ls',
@@ -120,13 +148,27 @@ for (const method of [
 	['verify', 'lastRun']
 ]) {
 	if (Array.isArray(method)) {
-		if (method[1] === 'stream' && method[0] !== 'put') {
-			module.exports[method[0]][method[1]] = async (...args) => {
-				const [cacache, cachePath] = await prepare();
-				return toAsyncIterable(cacache[method[0]][method[1]](cachePath, ...args));
-			};
+		if (method[1] === 'stream') {
+			if (method[0] === 'put') {
+				exports.put.stream = (...args) => new NpcachePutStream(...args);
+			} else {
+				exports[method[0]][method[1]] = (...args) => {
+					const stream = Readable.from((async function *() {
+						const [cacache, cachePath] = await prepare();
+						const internalStream = toAsyncIterable(cacache[method[0]][method[1]](cachePath, ...args));
+
+						for (const eventName of STREAM_EVENTS) {
+							internalStream.once(eventName, value => stream.emit(eventName, value));
+						}
+
+						yield *internalStream;
+					})());
+
+					return stream;
+				};
+			}
 		} else {
-			module.exports[method[0]][method[1]] = async (...args) => {
+			exports[method[0]][method[1]] = async (...args) => {
 				const [cacache, cachePath] = await prepare();
 				return cacache[method[0]][method[1]](cachePath, ...args);
 			};
@@ -135,18 +177,19 @@ for (const method of [
 		continue;
 	}
 
-	module.exports[method] = async (...args) => {
+	exports[method] = async (...args) => {
 		const [cacache, cachePath] = await prepare();
 		return cacache[method](cachePath, ...args);
 	};
 }
 
-module.exports.get.stream.byDigest = async (...args) => {
+exports.get.stream.byDigest = (...args) => Readable.from((async function *() {
 	const [cacache, cachePath] = await prepare();
-	return toAsyncIterable(cacache.get.stream.byDigest(cachePath, ...args));
-};
 
-Object.defineProperty(module.exports, 'MINIMUM_REQUIRED_NPM_VERSION', {
-	value: MINIMUM_REQUIRED_NPM_VERSION,
-	enumerable: true
+	yield *toAsyncIterable(cacache.get.stream.byDigest(cachePath, ...args));
+})());
+
+Object.defineProperty(exports, 'MINIMUM_REQUIRED_NPM_VERSION', {
+	enumerable: true,
+	value: MINIMUM_REQUIRED_NPM_VERSION
 });

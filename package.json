@@ -28,10 +28,11 @@
 	},
 	"devDependencies": {
 		"@shinnn/eslint-config": "^6.9.0",
+		"babel-eslint": "^10.0.2",
 		"broken-npm-path": "^1.0.0",
 		"clear-module": "^3.1.0",
 		"eslint": "^5.14.1",
-		"nyc": "^13.3.0",
+		"nyc": "^14.1.1",
 		"nyc-config-common": "^1.0.1",
 		"path-key": "^2.0.1",
 		"rmfr": "^2.0.0",
@@ -39,6 +40,7 @@
 	},
 	"eslintConfig": {
 		"extends": "@shinnn",
+		"parser": "babel-eslint",
 		"rules": {
 			"no-use-extend-native/no-use-extend-native": "off"
 		}

@@ -35,20 +35,18 @@ const npcache = require('npcache');
 
 ### npcache
 
-The API is based on [cacache](https://github.com/zkat/cacache), a cache manipulation library used inside [npm CLI](https://github.com/npm/cli).
+The API is based on [cacache](https://github.com/npm/cacache), a cache manipulation library used inside [npm CLI](https://github.com/npm/cli).
 
 Note the following differences:
 
 * Original `cache` parameters are omitted, and it defaults to [`_cacache` in the npm cache directory](https://docs.npmjs.com/cli/cache#details).
 * Method aliases, for example `cacache.rm.entry` → `cacache.rm`, are removed.
-* Every method returns a `Promise`, even if a corresponding original method doesn't.
-  * If an original `cacache.*` method returns a `Stream`, `npcache.*` returns a `Promise<Stream>`.
-  * If an original `cacache.*` method returns nothing, `npcache.*` returns a `Promise<undefined>`.
-* [`setLocale`](https://github.com/zkat/cacache#--cacachesetlocalelocale) method is not supported.
+* [`clearMemoized()`](https://github.com/npm/cacache#clear-memoized) returns a `Promise` instead of `undefined`.
+* [`setLocale()`](https://github.com/npm/cacache#set-locale) method is not supported.
 
 ```javascript
 (async () => {
-  for await (const {path} of await npcache.ls.stream()) {
+  for await (const {path} of npcache.ls.stream()) {
     console.log(path);
   }
 })();
